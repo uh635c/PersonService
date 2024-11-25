@@ -42,7 +42,7 @@ public class UserEntity implements Persistable<String> {
     private String addressId;
 
     @Transient
-    private AddressEntity addressEntity;
+    private AddressEntity address;
 
     @Override
     public boolean isNew() {

@@ -6,10 +6,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.uh635c.dto.IndividualRequestDTO;
 import ru.uh635c.dto.IndividualResponseDTO;
-import ru.uh635c.personservice.entity.AddressEntity;
-import ru.uh635c.personservice.entity.CountryEntity;
 import ru.uh635c.personservice.entity.IndividualEntity;
-import ru.uh635c.personservice.entity.UserEntity;
 import ru.uh635c.personservice.mappers.AddressMapper;
 import ru.uh635c.personservice.mappers.IndividualMapper;
 import ru.uh635c.personservice.mappers.UserMapper;
@@ -31,76 +28,95 @@ public class IndividualServiceImpl implements IndividualService {
 
     @Override
     public Mono<IndividualResponseDTO> getIndividual(String id) {
-//        return individualRepository.findById(id)
-//                .switchIfEmpty(Mono.error(new RuntimeException("not found")))
-//                .map(individualEntity -> {
-//                            userRepository.findById(individualEntity.getUserId())
-//                                    .flatMap(userEntity -> {
-//                                        individualEntity.setUserEntity(userEntity);
-//                                        return addressRepository.findById(userEntity.getAddressId())
-//                                                .flatMap(addressEntity -> {
-//                                                    userEntity.setAddressEntity(addressEntity);
-//                                                    return countryRepository.findById(addressEntity.getCountryId())
-//                                                            .map(countryEntity -> {
-//                                                                addressEntity.setCountry(countryEntity);
-//                                                                return countryEntity;
-//                                                            });
-//                                                });
-//                                    }).block();
-//                            return individualEntity; //сомнительно
-//                        }
-//                )
-//                .map(individualMapper::map);
-        return null;
+        return individualRepository.findById(id)
+                .switchIfEmpty(Mono.error(new RuntimeException("not found")))
+                .flatMap(individualEntity -> userRepository.findById(individualEntity.getUserId())
+                        .flatMap(userEntity -> {
+                            individualEntity.setUserEntity(userEntity);
+                            return addressRepository.findById(userEntity.getAddressId())
+                                    .flatMap(addressEntity -> {
+                                        userEntity.setAddress(addressEntity);
+                                        return countryRepository.findById(addressEntity.getCountryId())
+                                                .map(countryEntity -> {
+                                                    addressEntity.setCountry(countryEntity);
+                                                    return individualEntity;
+                                                });
+                                    });
+                        }))
+                .map(individualMapper::map);
     }
 
     @Override
     public Flux<IndividualResponseDTO> getAllIndividuals() {
-        individualRepository.findAll()
+        return individualRepository.findAll()
                 .switchIfEmpty(Mono.error(new RuntimeException("not found")))
-                .map(individualEntity -> {
-                    userRepository.findById(individualEntity.getUserId())
-                            .flatMap(userEntity -> {
-                                individualEntity.setUserEntity(userEntity);
-                                return addressRepository.findById(userEntity.getAddressId())
-                                        .flatMap(addressEntity -> {
-                                            userEntity.setAddressEntity(addressEntity);
-                                            return countryRepository.findById(addressEntity.getCountryId())
-                                                    .map(countryEntity -> {
-                                                        addressEntity.setCountry(countryEntity);
-                                                        return countryEntity;
-                                                    });
-                                        });
-                            }).block();
-                    return individualEntity; //сомнительно
-                });
-        return null;
+                .flatMap(individualEntity -> userRepository.findById(individualEntity.getUserId())
+                        .flatMap(userEntity -> {
+                            individualEntity.setUserEntity(userEntity);
+                            return addressRepository.findById(userEntity.getAddressId())
+                                    .flatMap(addressEntity -> {
+                                        userEntity.setAddress(addressEntity);
+                                        return countryRepository.findById(addressEntity.getCountryId())
+                                                .map(countryEntity -> {
+                                                    addressEntity.setCountry(countryEntity);
+                                                    return individualEntity;
+                                                });
+                                    });
+                        }))
+                .map(individualMapper::map);
     }
+
 
     @Override
     public Mono<IndividualResponseDTO> saveIndividual(IndividualRequestDTO individualDTO) {
-//        countryRepository.findByName(individualDTO.getCountry())
-//                .flatMap(countryEntity -> addressRepository.save(addressMapper.mapAddress(individualDTO)
-//                        .toBuilder()
-//                        .countryId(countryEntity.getId())
-//                        .build()))
-//                .flatMap(addressEntity -> userRepository.save(userMapper.mapUser(individualDTO)
-//                        .toBuilder()
-//                        .addressId(addressEntity.getId())
-//                        .build()))
-//                .flatMap(userEntity -> individualRepository.save(individualMapper.mapIndividualEntity(individualDTO)
-//                        .toBuilder()
-//                        .userId(userEntity.getId())
-//                        .build()))
-//                .map(individualMapper::map)
-
-
-
-        return null;
+        return countryRepository.findByName(individualDTO.getCountry())
+                .flatMap(countryEntity -> addressRepository.save(addressMapper.mapAddress(individualDTO)
+                                .toBuilder()
+                                .countryId(countryEntity.getId())
+                                .build())
+                        .map(addressEntity -> {
+                            addressEntity.setCountry(countryEntity);
+                            return addressEntity;
+                        }))
+                .flatMap(addressEntity -> userRepository.save(userMapper.mapUser(individualDTO)
+                                .toBuilder()
+                                .addressId(addressEntity.getId())
+                                .build())
+                        .map(userEntity -> {
+                            userEntity.setAddress(addressEntity);
+                            return userEntity;
+                        }))
+                .flatMap(userEntity -> individualRepository.save(individualMapper.mapIndividualEntity(individualDTO)
+                                .toBuilder()
+                                .userId(userEntity.getId())
+                                .build())
+                        .map(individualEntity -> {
+                            individualEntity.setUserEntity(userEntity);
+                            return individualEntity;
+                        }))
+                .map(individualMapper::map);
     }
 
     @Override
     public Mono<IndividualResponseDTO> updateIndividual(IndividualRequestDTO individualDTO) {
         return null;
+    }
+
+    ////////////////////////////////////private methods////////////////////////////////////
+
+    private Mono<IndividualEntity> getIndividualEntity(IndividualEntity individualEntity) {
+        return userRepository.findById(individualEntity.getUserId())
+                .flatMap(userEntity -> {
+                    individualEntity.setUserEntity(userEntity);
+                    return addressRepository.findById(userEntity.getAddressId())
+                            .flatMap(addressEntity -> {
+                                userEntity.setAddress(addressEntity);
+                                return countryRepository.findById(addressEntity.getCountryId())
+                                        .map(countryEntity -> {
+                                            addressEntity.setCountry(countryEntity);
+                                            return individualEntity;
+                                        });
+                            });
+                })
     }
 }
