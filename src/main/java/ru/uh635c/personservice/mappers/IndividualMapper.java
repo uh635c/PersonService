@@ -7,10 +7,15 @@ import ru.uh635c.dto.IndividualResponseDTO;
 import ru.uh635c.personservice.entity.IndividualEntity;
 import ru.uh635c.entity.Status;
 
+
 @Mapper(componentModel = "spring", imports = Status.class)
 public interface IndividualMapper {
 
-
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = ".", source = "userEntity")
+    @Mapping(target = ".", source = "userEntity.addressEntity")
+    @Mapping(target = "country", source = "userEntity.addressEntity.countryEntity.name")
+//    @Mapping(target = "", source = "")
     IndividualResponseDTO map(IndividualEntity entity);
 
     @Mapping(target = "passportNumber", source = "passportNumber")
@@ -21,4 +26,7 @@ public interface IndividualMapper {
     @Mapping(target = "userEntity", ignore = true)
     @Mapping(target = "id", ignore = true)
     IndividualEntity mapIndividualEntity(IndividualRequestDTO responseDTO);
+
+
+    IndividualRequestDTO mapIndividualRequestDTO(IndividualResponseDTO responseDTO);
 }

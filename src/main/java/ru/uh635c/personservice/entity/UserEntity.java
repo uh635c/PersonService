@@ -29,9 +29,9 @@ public class UserEntity implements Persistable<String> {
     @Column("last_name")
     private String lastName;
     @Column("created_at")
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
     @Column("updated_at")
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
     @Column("verified_at")
     private LocalDateTime verifiedAt;
     @Column("archived_at")
@@ -42,7 +42,7 @@ public class UserEntity implements Persistable<String> {
     private String addressId;
 
     @Transient
-    private AddressEntity address;
+    private AddressEntity addressEntity;
 
     @Override
     public boolean isNew() {

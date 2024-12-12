@@ -31,7 +31,7 @@ public class AddressEntity implements Persistable<String> {
     private int countryId;
 
     @Transient
-    private CountryEntity country;
+    private CountryEntity countryEntity;
 
     @Override
     public boolean isNew() {

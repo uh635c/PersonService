@@ -8,6 +8,6 @@ spring:
     password: test
   flyway:
     url: jdbc:postgresql://localhost:5432/Person
-    username: ${spring.r2dbc.username}
+    user: ${spring.r2dbc.username}
     password: ${spring.r2dbc.password}
     locations: classpath:db/migration

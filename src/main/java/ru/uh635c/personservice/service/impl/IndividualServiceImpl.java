@@ -1,17 +1,27 @@
 package ru.uh635c.personservice.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
+import org.javers.core.Javers;
+import org.javers.core.diff.Diff;
+import org.javers.core.diff.changetype.ValueChange;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.uh635c.dto.IndividualRequestDTO;
 import ru.uh635c.dto.IndividualResponseDTO;
 import ru.uh635c.personservice.entity.IndividualEntity;
+import ru.uh635c.personservice.entity.UserHistoryEntity;
+import ru.uh635c.personservice.entity.UserType;
 import ru.uh635c.personservice.mappers.AddressMapper;
 import ru.uh635c.personservice.mappers.IndividualMapper;
 import ru.uh635c.personservice.mappers.UserMapper;
 import ru.uh635c.personservice.repository.*;
 import ru.uh635c.personservice.service.IndividualService;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -25,24 +35,16 @@ public class IndividualServiceImpl implements IndividualService {
     private final IndividualMapper individualMapper;
     private final AddressMapper addressMapper;
     private final UserMapper userMapper;
+    private final Javers javers;
+    private final TransactionalOperator operator;
+    private final ObjectMapper objectMapper;
+
 
     @Override
     public Mono<IndividualResponseDTO> getIndividual(String id) {
         return individualRepository.findById(id)
                 .switchIfEmpty(Mono.error(new RuntimeException("not found")))
-                .flatMap(individualEntity -> userRepository.findById(individualEntity.getUserId())
-                        .flatMap(userEntity -> {
-                            individualEntity.setUserEntity(userEntity);
-                            return addressRepository.findById(userEntity.getAddressId())
-                                    .flatMap(addressEntity -> {
-                                        userEntity.setAddress(addressEntity);
-                                        return countryRepository.findById(addressEntity.getCountryId())
-                                                .map(countryEntity -> {
-                                                    addressEntity.setCountry(countryEntity);
-                                                    return individualEntity;
-                                                });
-                                    });
-                        }))
+                .flatMap(this::getIndividualEntity)
                 .map(individualMapper::map);
     }
 
@@ -50,19 +52,7 @@ public class IndividualServiceImpl implements IndividualService {
     public Flux<IndividualResponseDTO> getAllIndividuals() {
         return individualRepository.findAll()
                 .switchIfEmpty(Mono.error(new RuntimeException("not found")))
-                .flatMap(individualEntity -> userRepository.findById(individualEntity.getUserId())
-                        .flatMap(userEntity -> {
-                            individualEntity.setUserEntity(userEntity);
-                            return addressRepository.findById(userEntity.getAddressId())
-                                    .flatMap(addressEntity -> {
-                                        userEntity.setAddress(addressEntity);
-                                        return countryRepository.findById(addressEntity.getCountryId())
-                                                .map(countryEntity -> {
-                                                    addressEntity.setCountry(countryEntity);
-                                                    return individualEntity;
-                                                });
-                                    });
-                        }))
+                .flatMap(this::getIndividualEntity)
                 .map(individualMapper::map);
     }
 
@@ -75,7 +65,7 @@ public class IndividualServiceImpl implements IndividualService {
                                 .countryId(countryEntity.getId())
                                 .build())
                         .map(addressEntity -> {
-                            addressEntity.setCountry(countryEntity);
+                            addressEntity.setCountryEntity(countryEntity);
                             return addressEntity;
                         }))
                 .flatMap(addressEntity -> userRepository.save(userMapper.mapUser(individualDTO)
@@ -83,7 +73,7 @@ public class IndividualServiceImpl implements IndividualService {
                                 .addressId(addressEntity.getId())
                                 .build())
                         .map(userEntity -> {
-                            userEntity.setAddress(addressEntity);
+                            userEntity.setAddressEntity(addressEntity);
                             return userEntity;
                         }))
                 .flatMap(userEntity -> individualRepository.save(individualMapper.mapIndividualEntity(individualDTO)
@@ -94,12 +84,34 @@ public class IndividualServiceImpl implements IndividualService {
                             individualEntity.setUserEntity(userEntity);
                             return individualEntity;
                         }))
+                .as(operator::transactional)
                 .map(individualMapper::map);
     }
 
     @Override
-    public Mono<IndividualResponseDTO> updateIndividual(IndividualRequestDTO individualDTO) {
-        return null;
+    public Mono<IndividualResponseDTO> updateIndividual(IndividualRequestDTO newIndividualDTO) {
+        if (newIndividualDTO.getId() == null) {
+            return Mono.error(new RuntimeException("id is null"));
+        }
+        return getIndividual(newIndividualDTO.getId()).flatMap(individualDTO -> { // use getIndividual method from this service is it ok?
+                    Diff diff = javers.compare(individualMapper.mapIndividualRequestDTO(individualDTO), newIndividualDTO);
+                    JsonObject changes = new JsonObject();
+                    diff.getChangesByType(ValueChange.class).forEach(change ->
+                            changes.addProperty(change.getPropertyName(), (String) change.getRight()));
+
+                    return individualRepository.findById(newIndividualDTO.getId())
+                            .flatMap(individual -> userHistoryRepository.save(UserHistoryEntity.builder()
+                                    .created(LocalDateTime.now())
+                                    .comment("by system")
+                                    .reason("by system")
+                                    .user_type(UserType.INDIVIDUAL)
+                                    .userId(individual.getUserId())
+                                    .changedValue(changes.toString())
+                                    .build()
+                            ))
+                            .then(saveIndividual(newIndividualDTO))// могу ли я так сохранить, транзакционность будет?
+                            .as(operator::transactional);
+                });
     }
 
     ////////////////////////////////////private methods////////////////////////////////////
@@ -110,13 +122,13 @@ public class IndividualServiceImpl implements IndividualService {
                     individualEntity.setUserEntity(userEntity);
                     return addressRepository.findById(userEntity.getAddressId())
                             .flatMap(addressEntity -> {
-                                userEntity.setAddress(addressEntity);
+                                userEntity.setAddressEntity(addressEntity);
                                 return countryRepository.findById(addressEntity.getCountryId())
                                         .map(countryEntity -> {
-                                            addressEntity.setCountry(countryEntity);
+                                            addressEntity.setCountryEntity(countryEntity);
                                             return individualEntity;
                                         });
                             });
-                })
+                });
     }
 }

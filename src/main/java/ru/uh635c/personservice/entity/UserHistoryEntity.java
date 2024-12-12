@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
@@ -12,13 +14,20 @@ import java.time.LocalDateTime;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@Table("user_history")
+@Table("user_histories")
 public class UserHistoryEntity {
+    @Id
     private String id;
+    @Column("created")
     private LocalDateTime created;
-    private String user_type;
-    private String reason;
-    private String comment;
+    @Column("user_type")
+    private UserType user_type;
+    @Column("reason")
+    private String reason;//by system
+    @Column("comment")
+    private String comment;//by system
+    @Column("changed_value")
     private String changedValue;
+    @Column("user_id")
     private String userId;
 }

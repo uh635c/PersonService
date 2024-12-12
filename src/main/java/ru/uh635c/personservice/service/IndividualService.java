@@ -12,5 +12,5 @@ public interface IndividualService {
 
     Mono<IndividualResponseDTO> updateIndividual(IndividualRequestDTO individualDTO);
 
-    Flux<IndividualResponseDTO> getAllIndividuals();
+    Flux<IndividualResponseDTO> getAllIndividuals() ;
 }
