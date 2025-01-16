@@ -1,5 +1,6 @@
 package ru.uh635c.personservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,8 +27,8 @@ public class UserHistoryEntity {
     private String reason;//by system
     @Column("comment")
     private String comment;//by system
-    @Column("changed_value")
-    private String changedValue;
+    @Column("changed_values")
+    private String changedValues;
     @Column("user_id")
     private String userId;
 }

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.javers.core.Javers;
 import org.javers.core.diff.Diff;
 import org.javers.core.diff.changetype.ValueChange;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
@@ -15,11 +16,14 @@ import ru.uh635c.dto.IndividualResponseDTO;
 import ru.uh635c.personservice.entity.IndividualEntity;
 import ru.uh635c.personservice.entity.UserHistoryEntity;
 import ru.uh635c.personservice.entity.UserType;
+import ru.uh635c.personservice.exceptions.UserNotFoundException;
+import ru.uh635c.personservice.exceptions.UserSavingException;
 import ru.uh635c.personservice.mappers.AddressMapper;
 import ru.uh635c.personservice.mappers.IndividualMapper;
 import ru.uh635c.personservice.mappers.UserMapper;
 import ru.uh635c.personservice.repository.*;
 import ru.uh635c.personservice.service.IndividualService;
+
 
 import java.time.LocalDateTime;
 
@@ -38,12 +42,13 @@ public class IndividualServiceImpl implements IndividualService {
     private final Javers javers;
     private final TransactionalOperator operator;
     private final ObjectMapper objectMapper;
+    private final ApplicationContext context;
 
 
     @Override
     public Mono<IndividualResponseDTO> getIndividual(String id) {
         return individualRepository.findById(id)
-                .switchIfEmpty(Mono.error(new RuntimeException("not found")))
+                .switchIfEmpty(Mono.error(new UserNotFoundException("There is not user with provided id = " + id, "USER_NOT_FOUND")))
                 .flatMap(this::getIndividualEntity)
                 .map(individualMapper::map);
     }
@@ -51,7 +56,7 @@ public class IndividualServiceImpl implements IndividualService {
     @Override
     public Flux<IndividualResponseDTO> getAllIndividuals() {
         return individualRepository.findAll()
-                .switchIfEmpty(Mono.error(new RuntimeException("not found")))
+                .switchIfEmpty(Mono.error(new UserNotFoundException("There are no users", "USER_NOT_FOUND")))
                 .flatMap(this::getIndividualEntity)
                 .map(individualMapper::map);
     }
@@ -90,10 +95,12 @@ public class IndividualServiceImpl implements IndividualService {
 
     @Override
     public Mono<IndividualResponseDTO> updateIndividual(IndividualRequestDTO newIndividualDTO) {
-        if (newIndividualDTO.getId() == null) {
-            return Mono.error(new RuntimeException("id is null"));
+        if (newIndividualDTO.getId() == null || newIndividualDTO.getId().isEmpty()) {
+            return Mono.error(new UserSavingException("Provided individualDto`s id to update is null or empty", "USER_SAVING_FAILED"));
         }
-        return getIndividual(newIndividualDTO.getId()).flatMap(individualDTO -> { // use getIndividual method from this service is it ok?
+        return getIndividual(newIndividualDTO.getId()) // TODO use getIndividual method from this service is it ok?
+                .switchIfEmpty(Mono.error(new UserNotFoundException("There is no user to update with provided id = " + newIndividualDTO.getId(), "USER_NOT_FOUND")))
+                .flatMap(individualDTO -> {
                     Diff diff = javers.compare(individualMapper.mapIndividualRequestDTO(individualDTO), newIndividualDTO);
                     JsonObject changes = new JsonObject();
                     diff.getChangesByType(ValueChange.class).forEach(change ->
@@ -106,7 +113,7 @@ public class IndividualServiceImpl implements IndividualService {
                                     .reason("by system")
                                     .user_type(UserType.INDIVIDUAL)
                                     .userId(individual.getUserId())
-                                    .changedValue(changes.toString())
+                                    .changedValues(changes.toString())
                                     .build()
                             ))
                             .then(saveIndividual(newIndividualDTO))// могу ли я так сохранить, транзакционность будет?
