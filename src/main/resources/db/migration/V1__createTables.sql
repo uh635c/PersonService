@@ -1,4 +1,4 @@
--- CREATE EXTENSION IF NOT EXISTS 'uuid-ossp';
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE if not exists countries
 (
@@ -21,7 +21,7 @@ CREATE TABLE if not exists addresses
 CREATE TABLE if not exists users
 (
     id          varchar(36) PRIMARY KEY default uuid_generate_v4(),
-    secret_key  varchar(32) NOT NULL,
+    secret_key  varchar(32),
     first_name  varchar(32) NOT NULL,
     last_name   varchar(32) NOT NULL,
     created_at  timestamp,
@@ -54,7 +54,7 @@ CREATE TABLE if not exists user_histories
 );
 
 INSERT INTO countries(id, name, alpha2, alpha3) VALUES (1, 'Russia', 'RU', 'RUS');
-INSERT INTO countries(id, name, alpha2, alpha3) VALUES (2, 'Unated States', 'US', 'USA');
+INSERT INTO countries(id, name, alpha2, alpha3) VALUES (2, 'United States', 'US', 'USA');
 
 INSERT INTO addresses(id, address, city, state, zip_code, country_id) VALUES ('7e46b49e-f181-448d-a1ae-d3586383737d', 'First str, bld. apr.1', 'Moscow', 'Moscow Region', '117525', 1);
 INSERT INTO addresses(id, address, city, state, zip_code, country_id) VALUES ('d08beba0-f42e-4e08-81c2-79746ae3e01e', 'Main str, bld. apr.1', 'NY', 'NY', '999111', 2);

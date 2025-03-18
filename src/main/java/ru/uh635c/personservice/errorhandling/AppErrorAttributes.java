@@ -5,7 +5,7 @@ import org.springframework.boot.web.reactive.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
-import ru.uh635c.personservice.entity.dtos.ErrorDto;
+import ru.uh635c.dto.ErrorDTO;
 import ru.uh635c.personservice.exceptions.CustomException;
 
 import java.util.Map;
@@ -20,13 +20,13 @@ public class AppErrorAttributes extends DefaultErrorAttributes {
 
         if(error instanceof CustomException) {
             errorAttributes.put("status", HttpStatus.BAD_REQUEST);
-            errorAttributes.put("body", ErrorDto.builder()
+            errorAttributes.put("body", ErrorDTO.builder()
                     .errorCode(((CustomException)error).getErrorCode())
-                    .errorMessage(((CustomException)error).getMessage())
+                    .errorMessage(error.getMessage())
                     .build());
         }else{
             errorAttributes.put("status", HttpStatus.INTERNAL_SERVER_ERROR);
-            errorAttributes.put("message", ErrorDto.builder()
+            errorAttributes.put("message", ErrorDTO.builder()
                     .errorCode("INTERNAL_SERVER_ERROR")
                     .errorMessage(error.getMessage()));
         }

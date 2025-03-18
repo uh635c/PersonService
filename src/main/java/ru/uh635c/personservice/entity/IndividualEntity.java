@@ -1,14 +1,13 @@
 package ru.uh635c.personservice.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.boot.convert.DataSizeUnit;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.util.StringUtils;
 import ru.uh635c.entity.Status;
 
 @Data
@@ -16,7 +15,7 @@ import ru.uh635c.entity.Status;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("individuals")
-public class IndividualEntity {
+public class IndividualEntity implements Persistable<String> {
     @Id
     private String id;
     @Column("passport_number")
@@ -32,4 +31,9 @@ public class IndividualEntity {
 
     @Transient
     private UserEntity userEntity;
+
+    @Override
+    public boolean isNew() {
+        return !StringUtils.hasText(id);
+    }
 }

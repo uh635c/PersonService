@@ -1,16 +1,24 @@
 package ru.uh635c.personservice.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.postgresql.codec.Json;
-import io.r2dbc.spi.Row;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 
 @ReadingConverter
-public class JsonbToStringConverter implements Converter<Json, String> {
+@RequiredArgsConstructor
+public class JsonbToStringConverter implements Converter<Json, JsonNode> {
 
+    private final ObjectMapper objectMapper;
+
+    @SneakyThrows
     @Override
-    public String convert(Json source) {
+    public JsonNode convert(Json source) {
+
         // Retrieve the JSONB value from the DB as a String
-        return source.asString();
+            return objectMapper.readTree(source.asString());
     }
 }

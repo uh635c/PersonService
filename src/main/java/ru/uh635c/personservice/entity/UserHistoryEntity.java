@@ -1,6 +1,8 @@
 package ru.uh635c.personservice.entity;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.r2dbc.postgresql.codec.Json;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,13 +24,13 @@ public class UserHistoryEntity {
     @Column("created")
     private LocalDateTime created;
     @Column("user_type")
-    private UserType user_type;
+    private UserType userType;
     @Column("reason")
     private String reason;//by system
     @Column("comment")
     private String comment;//by system
     @Column("changed_values")
-    private String changedValues;
+    private JsonNode changedValues;
     @Column("user_id")
     private String userId;
 }

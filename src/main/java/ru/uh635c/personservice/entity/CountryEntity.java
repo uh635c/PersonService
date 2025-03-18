@@ -25,7 +25,4 @@ public class CountryEntity {
     private String alpha2;
     @Column("alpha3")
     private String alpha3;
-//    private Status status;
-//    private LocalDateTime createdAt;
-//    private LocalDateTime updatedAt;
 }
