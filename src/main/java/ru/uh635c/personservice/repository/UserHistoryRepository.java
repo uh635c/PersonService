@@ -5,5 +5,5 @@ import ru.uh635c.personservice.entity.UserHistoryEntity;
 
 import java.util.UUID;
 
-public interface UserHistoryRepository extends R2dbcRepository<UserHistoryEntity, UUID> {
+public interface UserHistoryRepository extends R2dbcRepository<UserHistoryEntity, String> {
 }

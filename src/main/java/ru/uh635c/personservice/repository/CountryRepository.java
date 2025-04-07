@@ -6,6 +6,6 @@ import ru.uh635c.personservice.entity.CountryEntity;
 
 public interface CountryRepository extends R2dbcRepository<CountryEntity, Integer> {
 
-    Mono<CountryEntity> findById(int id);
+//    Mono<CountryEntity> findById(int id);
     Mono<CountryEntity> findByName(String name);
 }

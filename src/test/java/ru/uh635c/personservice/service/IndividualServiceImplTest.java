@@ -152,11 +152,7 @@ public class IndividualServiceImplTest {
         BDDMockito.given(addressRepository.save(any(AddressEntity.class))).willReturn(Mono.just(addressEntity));
         BDDMockito.given(userRepository.save(any(UserEntity.class))).willReturn(Mono.just(userEntity));
         BDDMockito.given(individualRepository.save(any(IndividualEntity.class))).willReturn(Mono.just(individualEntity));
-        BDDMockito.given(operator.transactional(any(Mono.class)))
-                .willAnswer(invocation -> {
-                    Object[] args = invocation.getArguments();
-                    return args[0];
-                });
+
 
         //when
         Mono<IndividualResponseDTO> obtainedResponseDto = individualServiceUnderTest.saveIndividual(individualRequestDTO);
@@ -207,11 +203,6 @@ public class IndividualServiceImplTest {
                 .build();
 
         BDDMockito.given(userHistoryRepository.save(any(UserHistoryEntity.class))).willReturn(Mono.just(userHistoryEntity));
-        BDDMockito.given(operator.transactional(any(Mono.class)))
-                .willAnswer(invocation -> {
-                    Object[] args = invocation.getArguments();
-                    return args[0];
-                });
 
             //for saveIndividual
         BDDMockito.given(countryRepository.findByName(anyString())).willReturn(Mono.just(countryEntity));
@@ -225,7 +216,7 @@ public class IndividualServiceImplTest {
         //then
         StepVerifier.create(obtainedResponseDto)
                 .assertNext(dto -> {
-                    verify(individualRepository, times(2)).findById(anyString());
+                    verify(individualRepository, times(1)).findById(anyString());
                     verify(userHistoryRepository, times(1)).save(any(UserHistoryEntity.class));
                     verify(countryRepository, times(1)).findByName(anyString());
                     verify(addressRepository, times(1)).save(any(AddressEntity.class));

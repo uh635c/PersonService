@@ -1,5 +1,6 @@
 package ru.uh635c.personservice.rest;
 
+import io.netty.util.internal.StringUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -14,13 +15,13 @@ import ru.uh635c.personservice.service.IndividualService;
 @RestController
 @RequestMapping("/api/v1/individuals")
 @RequiredArgsConstructor
-public class IndividualController {
+public class IndividualRestControllerV1 {
 
     private final IndividualService individualService;
 
     @GetMapping("/{id}")
     public Mono<IndividualResponseDTO> getIndividual(@PathVariable String id) {
-        if(id == null || id.isEmpty()){
+        if(StringUtil.isNullOrEmpty(id)){
             return Mono.error(new UserNotFoundException("Provided id is null or empty", "USER_NOT_FOUND"));
         }
         return individualService.getIndividual(id);
@@ -45,6 +46,14 @@ public class IndividualController {
             return Mono.error(new UserSavingException("Provided individualDto to update is null", "USER_SAVING_FAILED"));
         }
         return individualService.updateIndividual(individualRequestDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public Mono<Void> rollbackDelete(@PathVariable String id){
+        if(StringUtil.isNullOrEmpty(id)){
+            return Mono.error(new UserNotFoundException("Provided id is null or empty", "USER_NOT_FOUND"));
+        }
+        return individualService.deleteIndividual(id);
     }
 
 }

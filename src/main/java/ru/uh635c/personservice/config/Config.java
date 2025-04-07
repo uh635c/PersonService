@@ -22,16 +22,7 @@ public class Config extends AbstractR2dbcConfiguration {
 //    @Bean
     @Override
     public ConnectionFactory connectionFactory() {
-        return null
-        /*ConnectionFactories.get(
-                ConnectionFactoryOptions.builder()
-                        .option(DRIVER, "postgresql")
-                        .option(HOST, "localhost")
-                        .option(PORT, 5432)
-                        .option(DATABASE, "Person")
-                        .option(USER, "postgres")
-                        .option(PASSWORD, "test")
-                        .build())*/;
+        return null;
     }
 
     @Bean

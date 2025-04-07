@@ -8,6 +8,7 @@ import org.javers.core.Javers;
 import org.javers.core.diff.Diff;
 import org.javers.core.diff.changetype.ValueChange;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,6 +44,7 @@ public class IndividualServiceImpl implements IndividualService {
     private final ObjectMapper objectMapper;
 
 
+    @Transactional
     @Override
     public Mono<IndividualResponseDTO> getIndividual(String id) {
         return individualRepository.findById(id)
@@ -51,6 +53,7 @@ public class IndividualServiceImpl implements IndividualService {
                 .map(individualMapper::map);
     }
 
+    @Transactional
     @Override
     public Flux<IndividualResponseDTO> getAllIndividuals() {
         return individualRepository.findAll()
@@ -60,6 +63,7 @@ public class IndividualServiceImpl implements IndividualService {
     }
 
 
+    @Transactional
     @Override
     public Mono<IndividualResponseDTO> saveIndividual(IndividualRequestDTO individualDTO) {
         return countryRepository.findByName(individualDTO.getCountry())
@@ -87,10 +91,10 @@ public class IndividualServiceImpl implements IndividualService {
                             individualEntity.setUserEntity(userEntity);
                             return individualEntity;
                         }))
-                .as(operator::transactional)
                 .map(individualMapper::map);
     }
 
+    @Transactional
     @Override
     public Mono<IndividualResponseDTO> updateIndividual(IndividualRequestDTO newIndividualDTO) {
         if (newIndividualDTO.getId() == null || newIndividualDTO.getId().isEmpty()) {
@@ -151,8 +155,22 @@ public class IndividualServiceImpl implements IndividualService {
                         return Mono.error(new RuntimeException(e));
                     }
                 })
-                .as(operator::transactional)
                 .map(individualMapper::map);
+    }
+
+    @Transactional
+    @Override
+    public Mono<Void> deleteIndividual(String id) {
+        return individualRepository.findById(id)
+                .flatMap(individualEntity -> userRepository.findById(individualEntity.getUserId())
+                        .flatMap(userEntity -> addressRepository.findById(userEntity.getAddressId())
+                                .flatMap(addressEntity -> individualRepository.delete(individualEntity)
+                                        .then(userRepository.delete(userEntity)
+                                                .then(addressRepository.delete(addressEntity))
+                                        )
+                                )
+                        )
+                );
     }
 
 ////////////////////////////////////private methods////////////////////////////////////

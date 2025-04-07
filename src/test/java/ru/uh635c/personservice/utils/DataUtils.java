@@ -161,7 +161,7 @@ public class DataUtils {
 
     public static CountryEntity countryEntityTransient2(){
         return CountryEntity.builder()
-                .name("Unated States")
+                .name("United States")
                 .alpha2("US")
                 .alpha3("USA")
                 .build();

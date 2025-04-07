@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
-import ru.uh635c.entity.Status;
-
-import java.time.LocalDateTime;
 
 @Data
 @Builder(toBuilder = true)

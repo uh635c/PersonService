@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(PostgreTestcontainerConfig.class)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-public class ItIndividualControllerTest {
+public class ItIndividualRestControllerV1Test {
 
     @Autowired
     private WebTestClient webClient;
@@ -39,9 +39,9 @@ public class ItIndividualControllerTest {
     @BeforeEach
     public void beforeAll() {
         individualRepository.deleteAll().block();
+        userHistoryRepository.deleteAll().block();
         userRepository.deleteAll().block();
         addressRepository.deleteAll().block();
-        userHistoryRepository.deleteAll().block();
     }
 
     @Test

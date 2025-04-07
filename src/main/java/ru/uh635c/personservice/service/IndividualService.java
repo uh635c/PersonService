@@ -13,4 +13,6 @@ public interface IndividualService {
     Mono<IndividualResponseDTO> updateIndividual(IndividualRequestDTO individualDTO);
 
     Flux<IndividualResponseDTO> getAllIndividuals() ;
+
+    Mono<Void> deleteIndividual(String id);
 }

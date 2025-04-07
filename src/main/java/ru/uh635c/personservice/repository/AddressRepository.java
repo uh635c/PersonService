@@ -6,6 +6,5 @@ import ru.uh635c.personservice.entity.AddressEntity;
 
 import java.util.UUID;
 
-public interface AddressRepository extends R2dbcRepository<AddressEntity, UUID> {
-    Mono<AddressEntity> findById(String id);
+public interface AddressRepository extends R2dbcRepository<AddressEntity, String> {
 }
